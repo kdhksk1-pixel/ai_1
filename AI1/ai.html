@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AI 통합 프롬프트 가이드 북</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            background-color: #f8fafc;
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        /* 뷰 전환 애니메이션 */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 스크롤바 커스텀 */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* 노션 스타일 테마 (View 1) */
+        .theme-notion { background-color: #ffffff; color: #374151; }
+        .theme-notion .card { border: 1px solid #e5e7eb; border-radius: 8px; background: white; }
+        
+        /* 파스텔 테마 (View 2) */
+        .theme-pastel { background-color: #F8FAF7; color: #334155; }
+        .theme-pastel .card { border-radius: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); background: white; border: 1px solid #f1f5f9; }
+        .theme-pastel .highlight { background: linear-gradient(120deg, #d4fc79 0%, #96e6a1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* 오피스 테마 (View 3 - 실무 밀착) */
+        .theme-office { background-color: #F1F5F9; color: #1e293b; }
+        .theme-office .card { border-radius: 12px; border-top: 4px solid #3b82f6; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800">
+
+    <!-- 토스트 알림창 -->
+    <div id="toast" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-opacity duration-300 pointer-events-none z-50 flex items-center gap-2 font-medium text-sm md:text-base whitespace-nowrap">
+        ✨ <span id="toast-message">클립보드에 복사되었습니다!</span>
+    </div>
+
+    <!-- 상단 네비게이션 헤더 -->
+    <header class="fixed top-0 left-0 w-full h-14 bg-white shadow-sm z-40 flex items-center px-4 justify-center env-safe-area">
+        <h1 id="navbar-title" class="text-base md:text-lg font-bold text-slate-800 flex items-center gap-2">
+            <span class="bg-indigo-600 text-white rounded px-2 py-0.5 text-xs">AI</span>
+            AI 프롬프트 가이드 북
+        </h1>
+    </header>
+
+    <!-- 가로 탭 메뉴 (직관적인 3분할 파티션) -->
+    <nav class="fixed top-14 left-0 w-full bg-white/90 backdrop-blur-sm border-b border-slate-200 z-30 overflow-x-auto">
+        <div class="flex max-w-4xl mx-auto px-2 md:px-5">
+            <button onclick="switchTab('view1', 1)" id="tab1" class="tab-btn flex-1 whitespace-nowrap py-3 md:py-4 px-2 text-center text-[13px] md:text-base font-bold border-b-2 transition-colors border-indigo-600 text-indigo-600">
+                <span class="inline-flex w-5 h-5 md:w-6 md:h-6 items-center justify-center rounded-full bg-indigo-100 text-indigo-700 mr-1 text-[11px] md:text-xs">1</span> 채팅 기본기
+            </button>
+            <button onclick="switchTab('view2', 2)" id="tab2" class="tab-btn flex-1 whitespace-nowrap py-3 md:py-4 px-2 text-center text-[13px] md:text-base font-medium border-b-2 transition-colors border-transparent text-slate-500 hover:text-slate-800">
+                <span class="inline-flex w-5 h-5 md:w-6 md:h-6 items-center justify-center rounded-full bg-slate-100 text-slate-600 mr-1 text-[11px] md:text-xs transition-colors">2</span> AI 100% 활용 가이드
+            </button>
+            <button onclick="switchTab('view3', 3)" id="tab3" class="tab-btn flex-1 whitespace-nowrap py-3 md:py-4 px-2 text-center text-[13px] md:text-base font-medium border-b-2 transition-colors border-transparent text-slate-500 hover:text-slate-800">
+                <span class="inline-flex w-5 h-5 md:w-6 md:h-6 items-center justify-center rounded-full bg-slate-100 text-slate-600 mr-1 text-[11px] md:text-xs transition-colors">3</span> 실무 밀착 프롬프트
+            </button>
+        </div>
+    </nav>
+
+    <!-- 메인 콘텐츠 영역 (pt-28로 상단 헤더+탭 높이 확보) -->
+    <main class="pt-[110px] min-h-screen">
+        
+        <!-- ==========================================
+             VIEW 1: 채팅 기본기
+             ========================================== -->
+        <section id="view1" class="view-section active theme-notion min-h-screen pb-20">
+            <div class="max-w-3xl mx-auto px-5 py-8 md:py-12 space-y-10">
+                <header class="border-b pb-6">
+                    <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight mb-3 text-black">AI 비서 200% 활용 매뉴얼</h1>
+                    <p class="text-base text-gray-500">ChatGPT, Claude 홈페이지의 기본 기능을 알고, 채팅창에서 똑똑하게 대화하는 방법을 다룸.</p>
+                </header>
+
+                <article class="space-y-8 text-[15px] md:text-base leading-relaxed">
+                    <!-- Section 1 -->
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
+                            <span>1.</span> 홈페이지 화면 구조 익히기
+                        </h2>
+                        <div class="space-y-4 pl-1 md:pl-4">
+                            <div class="card p-4 md:p-5">
+                                <h3 class="font-bold text-base md:text-lg mb-2">📝 새 채팅 (New Chat)</h3>
+                                <p class="text-gray-600 mb-2">AI는 하나의 대화방 안에서 나눈 문맥을 모두 기억! 대화 주제가 바뀔 때는 반드시 왼쪽 상단의 <strong>'새 채팅'</strong> 버튼을 눌러 방을 새로 만들기.</p>
+                                <p class="text-sm bg-gray-100 px-3 py-2 rounded break-keep">💡 어제 '여행 계획'을 짜던 방에서 오늘 '업무 회의록'을 요약시키면 AI가 헷갈려 함.</p>
+                            </div>
+                            <div class="card p-4 md:p-5">
+                                <h3 class="font-bold text-base md:text-lg mb-2">📎 파일 첨부 버튼 (클립/플러스 아이콘)</h3>
+                                <p class="text-gray-600">채팅창 입력란 옆을 보면 클립(📎) 또는 더하기(➕) 모양의 아이콘. 엑셀, PDF, 이미지 등을 첨부하고 문서를 요약하거나 분석시킬 수 있음.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2 -->
+                    <div>
+                        <h2 class="text-xl md:text-2xl font-bold mb-4 flex items-center gap-2 border-b border-gray-200 pb-2">
+                            <span>2.</span> 대화(티키타카) 이어가기
+                        </h2>
+                        <p class="mb-4">원하는 답이 한 번에 안 나온다고 실망 X. 질문을 다듬으며 대화를 이어가면 됨.</p>
+                        <ul class="list-disc pl-5 space-y-3 text-gray-700">
+                            <li><strong class="text-black">재생성:</strong> 방향은 맞는데 내용이 아쉬울 땐 답변 하단의 새로고침 아이콘을 클릭.</li>
+                            <li><strong class="text-black">꼬리 질문으로 다듬기:</strong> "말투가 너무 딱딱해. 친절하게 바꿔줘", "n번 항목이 어려워. 초등학생 비유로 설명해 줘" 처럼 피드백을 입력.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Section 3 (Warning) -->
+                    <div class="card bg-red-50 border-red-200 p-5 md:p-6">
+                        <h2 class="text-lg md:text-xl font-bold mb-3 text-red-700 flex items-center gap-2">
+                            🚨 필수 보안 주의사항
+                        </h2>
+                        <p class="text-red-900 mb-3 text-sm md:text-base">AI에 입력하는 데이터는 학습에 사용될 위험이 있어서, 아래 정보는 절대 그대로 입력하거나 첨부 금지.</p>
+                        <ul class="list-disc pl-5 space-y-2 text-red-800 text-[13px] md:text-sm">
+                            <li>학생, 고객의 실명 및 연락처 (반드시 '학생A' 등으로 마스킹)</li>
+                            <li>회사의 재무 데이터 및 미출시 프로젝트 정보</li>
+                            <li><strong>대체 방법:</strong> 엑셀 원본을 올리는 대신 "A열이 점수일 때 90점 이상을 A로 표시하는 수식을 짜줘" 처럼 <strong>수식이나 뼈대</strong>만 질문.</li>
+                        </ul>
+                    </div>
+                </article>
+
+                <!-- 1 -> 2단계 이동 버튼 -->
+                <div onclick="switchTab('view2', 2)" class="mt-12 bg-indigo-50 border border-indigo-100 rounded-xl p-5 md:p-6 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-indigo-100 hover:shadow-md transition-all group">
+                    <div class="mb-4 md:mb-0 text-center md:text-left">
+                        <span class="text-indigo-500 text-xs md:text-sm font-bold tracking-wide">다음 단계</span>
+                        <h3 class="text-base md:text-lg font-bold text-indigo-900 mt-1">2단계 - AI 100% 활용 가이드</h3>
+                    </div>
+                    <button class="bg-indigo-600 text-white px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 w-full md:w-auto justify-center group-hover:bg-indigo-700 transition-colors">
+                        다음으로 <span class="transform group-hover:translate-x-1 transition-transform">→</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 2: AI 100% 활용 가이드 (Pastel Style)
+             ========================================== -->
+        <section id="view2" class="view-section theme-pastel min-h-screen pb-20">
+            <div class="max-w-4xl mx-auto px-5 py-8 md:py-12 space-y-12">
+                
+                <header class="text-center space-y-3 md:space-y-4">
+                    <span class="bg-emerald-100 text-emerald-700 px-3 py-1 md:px-4 md:py-1.5 rounded-full text-xs md:text-sm font-bold tracking-wide">초보자 및 일상용 가이드</span>
+                    <h1 class="text-2xl md:text-5xl font-extrabold text-slate-800 leading-tight break-keep">
+                        AI는 <span class="highlight">눈치 없는 신입사원</span>입니다.
+                    </h1>
+                    <p class="text-[15px] md:text-lg text-slate-600 max-w-2xl mx-auto break-keep">
+                        두루뭉술하게 부탁 XXX!<br> 내가 누구인지, 무엇을, 어떤 형태로 원하는지 딱<br>4가지만 짚어주면 완벽하게 일함.
+                    </p>
+                </header>
+
+                <!-- 사진과 동일한 RCTF 그리드 -->
+                <div class="grid grid-cols-2 gap-4 md:gap-6 mt-6">
+                    <div class="card p-5 md:p-6 shadow-sm border border-slate-100">
+                        <div class="text-3xl md:text-4xl mb-3">🎭</div>
+                        <h3 class="font-bold text-lg md:text-xl mb-2 text-blue-600">R. 역할</h3>
+                        <p class="text-slate-600 text-sm md:text-base break-keep">"너는 10년 차 전문 트레이너야."</p>
+                    </div>
+                    <div class="card p-5 md:p-6 shadow-sm border border-slate-100">
+                        <div class="text-3xl md:text-4xl mb-3">📝</div>
+                        <h3 class="font-bold text-lg md:text-xl mb-2 text-amber-500">C. 상황</h3>
+                        <p class="text-slate-600 text-sm md:text-base break-keep">"나는 직장인이고 닭가슴살은 질렸어."</p>
+                    </div>
+                    <div class="card p-5 md:p-6 shadow-sm border border-slate-100">
+                        <div class="text-3xl md:text-4xl mb-3">🎯</div>
+                        <h3 class="font-bold text-lg md:text-xl mb-2 text-emerald-600">T. 지시</h3>
+                        <p class="text-slate-600 text-sm md:text-base break-keep">"구하기 쉬운 일반식 저녁 식단을 짜줘."</p>
+                    </div>
+                    <div class="card p-5 md:p-6 shadow-sm border border-slate-100">
+                        <div class="text-3xl md:text-4xl mb-3">📊</div>
+                        <h3 class="font-bold text-lg md:text-xl mb-2 text-purple-600">F. 형식</h3>
+                        <p class="text-slate-600 text-sm md:text-base break-keep">"요일, 칼로리가 포함된 표로 정리해."</p>
+                    </div>
+                </div>
+
+                <!-- 일상 프롬프트 조립기 -->
+                <div class="card border border-emerald-100 bg-white shadow-sm overflow-hidden">
+                    <div class="bg-emerald-50/50 p-4 md:p-6 border-b border-emerald-100 flex flex-col md:flex-row justify-between md:items-end gap-3">
+                        <div>
+                            <h2 class="text-lg md:text-xl font-bold flex items-center gap-2 text-slate-800">
+                                🪄 일상 프롬프트 조립기
+                            </h2>
+                            <p class="text-emerald-700/80 text-[13px] md:text-sm mt-1 break-keep">빈칸을 채우면 AI가 가장 좋아하는 형태의 프롬프트로 알아서 조립.</p>
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            <button onclick="fillExample2()" class="text-xs md:text-sm bg-emerald-500 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-full font-bold hover:bg-emerald-600 transition-colors shadow-sm">예시로 채워보기</button>
+                            <button onclick="clearFields2()" class="text-xs md:text-sm bg-slate-200 text-slate-600 px-3 md:px-4 py-1.5 md:py-2 rounded-full font-bold hover:bg-slate-300 transition-colors">모두 지우기</button>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 md:p-6">
+                        <div class="grid md:grid-cols-2 gap-4 mb-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <!-- iOS Safari 확대 방지를 위해 text-base (16px) 적용 -->
+                            <div>
+                                <label class="block text-[11px] font-bold text-blue-600 mb-1">R 맡을 역할</label>
+                                <input type="text" id="gen2-role" placeholder="1. 역할 (예: 친절한 상담사)" class="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base transition-shadow">
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-red-600 mb-1">C 상황 / 나의 사정</label>
+                                <input type="text" id="gen2-context" placeholder="2. 상황 (예: 친구가 우울해 함)" class="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base transition-shadow">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[11px] font-bold text-emerald-600 mb-1">T 할 일 / AI에게 부탁할 것</label>
+                                <input type="text" id="gen2-task" placeholder="3. 목표/지시 (예: 위로의 메시지 작성)" class="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base transition-shadow">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[11px] font-bold text-purple-600 mb-1">F 형식 / 답을 받고 싶은 모양</label>
+                                <input type="text" id="gen2-format" placeholder="4. 출력 형식 (예: 3가지 다른 버전)" class="w-full px-3 py-2.5 rounded-lg bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-base transition-shadow">
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl p-4 md:p-5 border-2 border-emerald-100 shadow-inner min-h-[160px] flex flex-col relative">
+                            <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+                                <h4 class="font-bold text-slate-500 text-[13px]">미리보기</h4>
+                                <button onclick="copyGeneratedPrompt2(this)" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded-lg text-[13px] md:text-sm font-bold transition-transform transform hover:scale-105 active:scale-95 shadow-sm flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                                    복사하기
+                                </button>
+                            </div>
+                            
+                            <!-- 줄글이 아닌 배지 형태의 결과가 출력될 공간 -->
+                            <div id="gen2-result-visual" class="text-[14px] md:text-[15px] leading-loose text-slate-400 italic flex-1">
+                                위 입력칸을 채우거나 '예시로 채워보기' 버튼을 클릭!!
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 일상 템플릿 -->
+                <div class="space-y-4">
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 px-2">☕ 일상 복붙 템플릿</h2>
+                    
+                    <div class="card p-5 md:p-6 flex flex-col md:flex-row gap-4 md:gap-6 items-start">
+                        <div class="flex-grow w-full">
+                            <div class="flex justify-between items-center mb-2 md:mb-0">
+                                <h3 class="font-bold text-base md:text-lg">✈️ 여행 계획 세우기</h3>
+                                <button onclick="copyText('tpl-travel', this)" class="md:hidden shrink-0 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-lg text-xs font-bold active:bg-emerald-200">복사</button>
+                            </div>
+                            <p id="tpl-travel" class="text-slate-600 text-sm bg-slate-50 p-3 md:p-4 rounded-xl leading-relaxed mt-2 md:mt-2">너는 전문 여행 가이드야. 이번에 [가족]과 함께 [3박 4일] 일정으로 [오사카]에 갈 예정이야. 숙소는 [우메다역] 근처고, 예산은 하루 [10만 원] 정도야. [쇼핑과 맛집 탐방]을 중심으로, 이동 동선이 꼬이지 않게 날짜별 일정을 표로 정리해 줘.</p>
+                        </div>
+                        <button onclick="copyText('tpl-travel', this)" class="hidden md:block shrink-0 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors">복사하기</button>
+                    </div>
+
+                    <div class="card p-5 md:p-6 flex flex-col md:flex-row gap-4 md:gap-6 items-start">
+                        <div class="flex-grow w-full">
+                            <div class="flex justify-between items-center mb-2 md:mb-0">
+                                <h3 class="font-bold text-base md:text-lg">💡 어려운 개념 쉽게 이해하기</h3>
+                                <button onclick="copyText('tpl-study', this)" class="md:hidden shrink-0 bg-emerald-100 text-emerald-700 px-3 py-1 rounded-lg text-xs font-bold active:bg-emerald-200">복사</button>
+                            </div>
+                            <p id="tpl-study" class="text-slate-600 text-sm bg-slate-50 p-3 md:p-4 rounded-xl leading-relaxed mt-2 md:mt-2">나는 [주식 투자]에 대해 전혀 모르는 초보자야. [금리 인상과 주가의 관계]에 대해 도무지 이해가 안 가. 이 개념을 [중학교 1학년] 수준에서, 우리가 흔히 겪는 [시장이나 마트에서의 장보기]에 비유해서 설명해 줘.</p>
+                        </div>
+                        <button onclick="copyText('tpl-study', this)" class="hidden md:block shrink-0 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-4 py-2 rounded-xl text-sm font-bold transition-colors">복사하기</button>
+                    </div>
+                </div>
+
+                <!-- 2 -> 3단계 이동 버튼 -->
+                <div onclick="switchTab('view3', 3)" class="mt-12 bg-emerald-50 border border-emerald-100 rounded-xl p-5 md:p-6 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-emerald-100 hover:shadow-md transition-all group">
+                    <div class="mb-4 md:mb-0 text-center md:text-left">
+                        <span class="text-emerald-600 text-xs md:text-sm font-bold tracking-wide">다음 단계</span>
+                        <h3 class="text-base md:text-lg font-bold text-emerald-900 mt-1">3단계 - 실무 밀착 프롬프트</h3>
+                    </div>
+                    <button class="bg-emerald-600 text-white px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 w-full md:w-auto justify-center group-hover:bg-emerald-700 transition-colors">
+                        다음으로 <span class="transform group-hover:translate-x-1 transition-transform">→</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             VIEW 3: 실무 밀착 AI 프롬프트 (Office Style)
+             ========================================== -->
+        <section id="view3" class="view-section theme-office min-h-screen pb-20">
+            <div class="max-w-4xl mx-auto px-5 py-8 md:py-12 space-y-10">
+                <header class="bg-white card p-6 md:p-10 text-center border-t-4 border-t-blue-500">
+                    <span class="inline-block bg-blue-100 text-blue-700 px-2 py-1 rounded text-[10px] md:text-xs font-bold mb-3 tracking-wider">WORKPLACE GUIDE</span>
+                    <h1 class="text-2xl md:text-4xl font-bold text-slate-900 mb-2 md:mb-3">실무 밀착 AI 프롬프트 가이드</h1>
+                    <p class="text-sm md:text-base text-slate-500">기획서 뼈대, 문서 요약, 엑셀 함수를 AI에게 맡기기</p>
+                </header>
+
+                <div class="grid md:grid-cols-2 gap-4 md:gap-6">
+                    <div class="card p-5 border-l-4 border-l-blue-500 border-t-0">
+                        <h3 class="font-bold text-base md:text-lg mb-2">💡 실무 워크플로우 핵심</h3>
+                        <p class="text-[13px] md:text-sm text-slate-600 leading-relaxed">
+                            AI에게 <strong>완제품을 기대하지 XXX.<br></strong> 가장 머리아픈 '초안'이나 '엑셀 수식'만 외주를 주고, 보안 데이터와 디테일은 자신이 직접 덧붙이는 것이 가장 빠름.
+                        </p>
+                    </div>
+                    <div class="card p-5 border-l-4 border-l-rose-500 border-t-0">
+                        <h3 class="font-bold text-base md:text-lg mb-2 text-rose-700">🚨 비식별화는 필수!!!</h3>
+                        <p class="text-[13px] md:text-sm text-slate-600 leading-relaxed">
+                            데이터를 올릴 때는 반드시 이름, 전화번호 열을 삭제하거나 가린 후 올리고, 구조만 동일하면 AI는 완벽한 결과를 내어줌.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- 💡 [추가됨] 업무 맞춤 프롬프트 생성기 -->
+                <div class="card bg-white p-5 md:p-8 shadow-sm border border-blue-100">
+                    <h2 class="text-lg md:text-xl font-bold mb-2 flex items-center gap-2 text-slate-800">
+                        💼 업무 맞춤 프롬프트 조립기
+                    </h2>
+                    <p class="text-slate-500 text-[13px] md:text-sm mb-6 break-keep">빈칸을 채우면 AI가 가장 좋아하는 형태의 업무 지시서로 알아서 조립.</p>
+                    
+                    <div class="space-y-3 mb-6">
+                        <!-- iOS Safari 확대 방지를 위해 text-base (16px) 적용 -->
+                        <input type="text" id="gen3-role" placeholder="1. 역할 (예: 5년 차 마케팅 기획자)" class="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
+                        <input type="text" id="gen3-context" placeholder="2. 업무 배경 (예: 신제품 음료 출시를 앞둠)" class="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
+                        <input type="text" id="gen3-task" placeholder="3. 목표/지시 (예: 인스타그램 홍보 이벤트 기획안 작성)" class="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
+                        <input type="text" id="gen3-format" placeholder="4. 출력 형식 (예: 상무님 보고용 1페이지 개조식 요약)" class="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-400 text-base">
+                    </div>
+
+                    <div class="bg-white rounded-xl p-4 md:p-5 shadow-sm border border-slate-100">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-slate-700 text-sm">미리보기</h4>
+                            <button onclick="copyGeneratedPrompt3(this)" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-[13px] md:text-sm font-bold transition-colors">
+                                복사하기
+                            </button>
+                        </div>
+                        <p id="gen3-result" class="text-sm md:text-[15px] leading-relaxed whitespace-pre-wrap min-h-[4rem] text-slate-400 italic">여기에 실무용 프롬프트가 완성!!!!!</p>
+                    </div>
+                </div>
+
+                <!-- 실무 템플릿 컬렉션 -->
+                <div class="space-y-4 md:space-y-6">
+                    <h2 class="text-xl md:text-2xl font-bold text-slate-800 px-1 border-b pb-2">업무 복붙 템플릿 (4종)</h2>
+                    
+                    <!-- 템플릿 1 -->
+                    <div class="card p-5 md:p-6 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-sm md:text-base text-slate-800">1. 긴 보고서 핵심 요약</h3>
+                            <button onclick="copyText('tpl-office1', this)" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md text-xs md:text-sm font-bold border border-blue-200 transition-colors">복사하기</button>
+                        </div>
+                        <p id="tpl-office1" class="text-slate-600 bg-slate-50 p-3 md:p-4 rounded-lg font-mono text-[12px] md:text-[13px] whitespace-pre-wrap leading-relaxed">아래 첨부한 긴 [보고서/뉴스 기사]를 읽고, 시간이 없는 임원진에게 보고할 수 있도록 핵심만 요약해 줘.
+
+조건:
+- 반드시 3줄 이내의 개조식으로 요약할 것.
+- 전문 용어는 이해하기 쉬운 비즈니스 용어로 순화.
+- 가장 중요한 '결론'이나 '시사점'이 첫 줄에 올 것.
+
+원문:
+[여기에 텍스트를 붙여넣으세요]</p>
+                    </div>
+
+                    <!-- 템플릿 2 -->
+                    <div class="card p-5 md:p-6 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-sm md:text-base text-slate-800">2. 엑셀 수식 및 자동화 외주</h3>
+                            <button onclick="copyText('tpl-office2', this)" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md text-xs md:text-sm font-bold border border-blue-200 transition-colors">복사하기</button>
+                        </div>
+                        <p id="tpl-office2" class="text-slate-600 bg-slate-50 p-3 md:p-4 rounded-lg font-mono text-[12px] md:text-[13px] whitespace-pre-wrap leading-relaxed">내 엑셀의 구조를 설명해 줄게.
+A열에는 [사원 번호], B열에는 [상반기 실적], C열에는 [하반기 실적]이 있어. 
+
+B열과 C열을 합산해서 1000 이상이면 '우수', 800 이상이면 '보통', 그 이하는 '미달'을 D열에 자동으로 입력해 주는 엑셀 수식을 작성해 줘. 내가 바로 복사해서 쓸 수 있게 수식만 알려줘.</p>
+                    </div>
+
+                    <!-- 템플릿 3 -->
+                    <div class="card p-5 md:p-6 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-sm md:text-base text-slate-800">3. 정중한 업무 협조 이메일</h3>
+                            <button onclick="copyText('tpl-office3', this)" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md text-xs md:text-sm font-bold border border-blue-200 transition-colors">복사하기</button>
+                        </div>
+                        <p id="tpl-office3" class="text-slate-600 bg-slate-50 p-3 md:p-4 rounded-lg font-mono text-[12px] md:text-[13px] whitespace-pre-wrap leading-relaxed">[개발팀]에게 업무 협조를 요청하는 이메일을 작성해야 해. 우리는 [마케팅팀]이고, [신규 서비스 브로셔 데이터 추출]이 급하게 필요해.
+
+기한은 [이번 주 금요일 오후 3시]까지이며, 왜 이 자료가 급한지(배경: 다음 주 VIP 시연회)를 설득력 있게 적어줘. 바쁜 타 부서를 배려하는 부드러운 쿠션어를 적절히 섞어서 정중한 톤으로 작성해 줘.</p>
+                    </div>
+
+                    <!-- 템플릿 4 -->
+                    <div class="card p-5 md:p-6 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-sm md:text-base text-slate-800">4. 두서없는 회의록 자동 정리</h3>
+                            <button onclick="copyText('tpl-office4', this)" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-md text-xs md:text-sm font-bold border border-blue-200 transition-colors">복사하기</button>
+                        </div>
+                        <p id="tpl-office4" class="text-slate-600 bg-slate-50 p-3 md:p-4 rounded-lg font-mono text-[12px] md:text-[13px] whitespace-pre-wrap leading-relaxed">너는 꼼꼼한 서기야. 아래 뒤죽박죽 섞인 회의 메모를 바탕으로 깔끔한 회의록을 작성해 줘.
+
+출력 형식:
+1) 결정된 사항
+2) 논의가 더 필요한 사항
+3) 담당자별 향후 할 일(To-do) 
+
+회의 메모: 
+[여기에 회의 중 대충 적은 메모들을 붙여넣으세요]</p>
+                    </div>
+                </div>
+
+                <!-- 3 -> 처음으로 (1단계) 이동 버튼 -->
+                <div onclick="switchTab('view1', 1)" class="mt-12 bg-slate-100 border border-slate-200 rounded-xl p-5 md:p-6 flex flex-col md:flex-row justify-between items-center cursor-pointer hover:bg-slate-200 hover:shadow-md transition-all group">
+                    <div class="mb-4 md:mb-0 text-center md:text-left">
+                        <span class="text-slate-500 text-xs md:text-sm font-bold tracking-wide">마무리</span>
+                        <h3 class="text-base md:text-lg font-bold text-slate-800 mt-1">다시 처음으로 돌아가기</h3>
+                    </div>
+                    <button class="bg-slate-700 text-white px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 w-full md:w-auto justify-center group-hover:bg-slate-800 transition-colors">
+                        <span class="transform group-hover:-translate-y-1 transition-transform">↑</span> 위로
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- JavaScript 로직 -->
+    <script>
+        // 1. 가로 탭(Tab) 전환 로직 (사이드바 삭제됨)
+        function switchTab(viewId, tabNumber) {
+            // 모든 뷰 숨기기
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            // 선택된 뷰 보이기
+            document.getElementById(viewId).classList.add('active');
+            
+            // 모든 탭 버튼 초기화
+            document.querySelectorAll('.tab-btn').forEach((btn, index) => {
+                btn.classList.remove('border-indigo-600', 'text-indigo-600', 'font-bold');
+                btn.classList.add('border-transparent', 'text-slate-500', 'font-medium');
+                
+                // 원형 숫자 배지 색상 초기화
+                const badge = btn.querySelector('span');
+                if(badge) {
+                    badge.classList.remove('bg-indigo-100', 'text-indigo-700');
+                    badge.classList.add('bg-slate-100', 'text-slate-600');
+                }
+            });
+
+            // 클릭된 탭 스타일 활성화
+            const clickedBtn = document.getElementById(`tab${tabNumber}`);
+            if(clickedBtn) {
+                clickedBtn.classList.remove('border-transparent', 'text-slate-500', 'font-medium');
+                clickedBtn.classList.add('border-indigo-600', 'text-indigo-600', 'font-bold');
+                
+                // 원형 숫자 배지 활성화
+                const clickedBadge = clickedBtn.querySelector('span');
+                if(clickedBadge) {
+                    clickedBadge.classList.remove('bg-slate-100', 'text-slate-600');
+                    clickedBadge.classList.add('bg-indigo-100', 'text-indigo-700');
+                }
+            }
+
+            // 부드럽게 화면 맨 위로 스크롤
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 2. 모바일 기기 완벽 호환 복사 및 토스트 로직
+        let toastTimeout;
+        function showToast(message = "클립보드에 복사되었습니다!") {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            
+            if (toastTimeout) clearTimeout(toastTimeout);
+            
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100', '-translate-y-4');
+            
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100', '-translate-y-4');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2000);
+        }
+
+        function handleCopySuccess(btnElement) {
+            showToast();
+            if(btnElement) {
+                const originalText = btnElement.innerHTML;
+                btnElement.innerHTML = '복사 완료!';
+                setTimeout(() => btnElement.innerHTML = originalText, 2000);
+            }
+        }
+
+        async function copyToClipboard(text, btnElement = null) {
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    handleCopySuccess(btnElement);
+                    return;
+                } catch (err) {
+                    console.warn("Clipboard API failed, fallback to textarea.");
+                }
+            }
+
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.top = '0';
+            textarea.style.left = '0';
+            textarea.style.opacity = '0';
+            textarea.setAttribute('readonly', ''); 
+            document.body.appendChild(textarea);
+            
+            if (navigator.userAgent.match(/ipad|iphone/i)) {
+                const range = document.createRange();
+                range.selectNodeContents(textarea);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                textarea.setSelectionRange(0, 999999);
+            } else {
+                textarea.select();
+            }
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    handleCopySuccess(btnElement);
+                } else {
+                    showToast("복사에 실패했습니다.");
+                }
+            } catch (err) {
+                showToast("복사를 지원하지 않는 브라우저입니다.");
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        function copyText(elementId, btnElement) {
+            const text = document.getElementById(elementId).innerText;
+            copyToClipboard(text, btnElement);
+        }
+
+        // 3. 2단계(View 2) 일상용 조립기 로직
+        const roleInput = document.getElementById('gen2-role');
+        const contextInput = document.getElementById('gen2-context');
+        const taskInput = document.getElementById('gen2-task');
+        const formatInput = document.getElementById('gen2-format');
+        const resultVisualBox = document.getElementById('gen2-result-visual');
+        let plainTextToCopy2 = "";
+
+        function updateGenerator2() {
+            const role = roleInput.value.trim();
+            const context = contextInput.value.trim();
+            const task = taskInput.value.trim();
+            const format = formatInput.value.trim();
+
+            if (!role && !context && !task && !format) {
+                resultVisualBox.innerHTML = "위 입력칸을 채우거나 '예시로 채워보기' 버튼을 클릭.";
+                resultVisualBox.classList.add('text-slate-400', 'italic');
+                resultVisualBox.classList.remove('text-slate-700');
+                plainTextToCopy2 = "";
+                return;
+            }
+
+            resultVisualBox.classList.remove('text-slate-400', 'italic');
+            resultVisualBox.classList.add('text-slate-700');
+
+            let htmlString = '<div class="space-y-3 mt-2">';
+            plainTextToCopy2 = "";
+
+            if (role) {
+                htmlString += `<div class="flex items-start gap-2"><span class="bg-blue-600 text-white rounded px-2 py-0.5 text-xs font-bold shrink-0 mt-0.5">R</span><span>너는 <strong class="font-bold text-slate-800">${role}</strong> 역할을 맡아줘.</span></div>`;
+                plainTextToCopy2 += `너는 ${role} 역할을 맡아줘.\n`;
+            }
+            if (context) {
+                htmlString += `<div class="flex items-start gap-2"><span class="bg-red-500 text-white rounded px-2 py-0.5 text-xs font-bold shrink-0 mt-0.5">C</span><span>상황: <strong class="font-bold text-slate-800">${context}</strong></span></div>`;
+                plainTextToCopy2 += `상황: ${context}\n`;
+            }
+            if (task) {
+                htmlString += `<div class="flex items-start gap-2"><span class="bg-emerald-600 text-white rounded px-2 py-0.5 text-xs font-bold shrink-0 mt-0.5">T</span><span>요청: <strong class="font-bold text-slate-800">${task}</strong></span></div>`;
+                plainTextToCopy2 += `요청: ${task}\n`;
+            }
+            if (format) {
+                htmlString += `<div class="flex items-start gap-2"><span class="bg-purple-600 text-white rounded px-2 py-0.5 text-xs font-bold shrink-0 mt-0.5">F</span><span>답변 형식: <strong class="font-bold text-slate-800">${format}</strong></span></div>`;
+                plainTextToCopy2 += `답변 형식: ${format}`;
+            }
+
+            htmlString += '</div>';
+            resultVisualBox.innerHTML = htmlString;
+        }
+
+        if(roleInput) {
+            [roleInput, contextInput, taskInput, formatInput].forEach(input => {
+                input.addEventListener('input', updateGenerator2);
+            });
+        }
+
+        function fillExample2() {
+            roleInput.value = "다정한 10년 차 상담사";
+            contextInput.value = "친한 친구가 취업 면접에서 떨어져 우울해하고 있어";
+            taskInput.value = "친구에게 보낼 위로 메시지를 써줘";
+            formatInput.value = "말투가 다른 3가지 버전, 각각 3문장 이내";
+            updateGenerator2();
+        }
+
+        function clearFields2() {
+            roleInput.value = "";
+            contextInput.value = "";
+            taskInput.value = "";
+            formatInput.value = "";
+            updateGenerator2();
+        }
+
+        function copyGeneratedPrompt2(btnElement) {
+            if(!plainTextToCopy2) {
+                showToast("먼저 빈칸을 입력해주세요!");
+                return;
+            }
+            copyToClipboard(plainTextToCopy2, btnElement);
+        }
+
+        // 4. 3단계(View 3) 실무용 조립기 로직
+        const roleInput3 = document.getElementById('gen3-role');
+        const contextInput3 = document.getElementById('gen3-context');
+        const taskInput3 = document.getElementById('gen3-task');
+        const formatInput3 = document.getElementById('gen3-format');
+        const resultVisualBox3 = document.getElementById('gen3-result');
+
+        function updateGenerator3() {
+            const role = roleInput3.value.trim();
+            const context = contextInput3.value.trim();
+            const task = taskInput3.value.trim();
+            const format = formatInput3.value.trim();
+
+            if (!role && !context && !task && !format) {
+                resultVisualBox3.innerHTML = "여기에 실무용 프롬프트가 완성됩니다...";
+                resultVisualBox3.classList.add('text-slate-400', 'italic');
+                resultVisualBox3.classList.remove('text-slate-800');
+                return;
+            }
+
+            resultVisualBox3.classList.remove('text-slate-400', 'italic');
+            resultVisualBox3.classList.add('text-slate-800');
+
+            let promptText = "";
+            if (role) promptText += `너는 ${role}야.\n`;
+            if (context) promptText += `현재 업무 배경은 ${context} 상황이야.\n`;
+            if (task) promptText += `이 내용을 바탕으로 ${task} 작업을 처리해 줘.\n`;
+            if (format) promptText += `결과물은 반드시 ${format} 형태로 작성해 줘.`;
+
+            resultVisualBox3.innerText = promptText;
+        }
+
+        if(roleInput3) {
+            [roleInput3, contextInput3, taskInput3, formatInput3].forEach(input => {
+                input.addEventListener('input', updateGenerator3);
+            });
+        }
+
+        function copyGeneratedPrompt3(btnElement) {
+            const text = resultVisualBox3.innerText;
+            if(text.includes("여기에 실무용")) {
+                showToast("먼저 내용을 입력해주세요!");
+                return;
+            }
+            copyToClipboard(text, btnElement);
+        }
+    </script>
+</body>
+</html>
